@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"go-stripe/internal/driver"
 	"log"
-	"myapp/internal/driver"
 	"net/http"
 	"os"
 	"time"
@@ -51,7 +51,7 @@ func main() {
 
 	flag.IntVar(&cfg.port, "port", 4001, "Server port to listen on")
 	flag.StringVar(&cfg.env, "env", "development", "Application environment {development|production|maintenance}")
-	flag.StringVar(&cfg.db.dsn, "dsn", "trevor:secret@tcp(localhost:3306)/widgets?parseTime=true&tls=false", "DSN")
+	flag.StringVar(&cfg.db.dsn, "dsn", "root:root@tcp(localhost:3306)/widgets?parseTime=true&tls=false", "DSN")
 
 	flag.Parse()
 

@@ -8,7 +8,7 @@
     const payButton = document.getElementById("pay-button");
     const processing = document.getElementById("processing-payment");
 
-    stripe = Stripe({{.API}});
+    stripe = Stripe({{.StripePublishableKey}});
 
     function hidePayButton() {
         payButton.classList.add("d-none");
@@ -45,7 +45,7 @@
         form.classList.add("was-validated");
         hidePayButton();
 
-        let amountToCharge = String(parseFloat(document.getElementById("amount").value) * 100)
+        let amountToCharge = document.getElementById("amount").value;
         
         let payload = {
             amount: amountToCharge,
@@ -61,7 +61,7 @@
             body: JSON.stringify(payload),
         }
 
-        fetch("{{index .StringMap "publishable_key"}}", requestOptions)
+        fetch("{{.API}}/api/payment-intent", requestOptions)
             .then(response => response.text())
             .then(response => {
                 let data;
@@ -82,7 +82,7 @@
                         } else if(result.paymentIntent) {
                             if (result.paymentIntent.status === "succeeded") {
                                 // we have charged the card
-                                document.getElementById("payment_method").value = result.paymentIntent.payment_method_types[0];
+                                document.getElementById("payment_method").value = result.paymentIntent.payment_method;
                                 document.getElementById("payment_intent").value = result.paymentIntent.id;
                                 document.getElementById("payment_amount").value = result.paymentIntent.amount;
                                 document.getElementById("payment_currency").value = result.paymentIntent.currency;

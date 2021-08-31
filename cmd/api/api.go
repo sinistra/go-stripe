@@ -3,11 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"go-stripe/internal/driver"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"myapp/internal/driver"
+	"myapp/internal/models"
 )
 
 const version = "1.0.0"
@@ -29,6 +31,7 @@ type application struct {
 	infoLog  *log.Logger
 	errorLog *log.Logger
 	version  string
+	DB       models.DBModel
 }
 
 func (app *application) serve() error {
@@ -51,7 +54,7 @@ func main() {
 
 	flag.IntVar(&cfg.port, "port", 4001, "Server port to listen on")
 	flag.StringVar(&cfg.env, "env", "development", "Application environment {development|production|maintenance}")
-	flag.StringVar(&cfg.db.dsn, "dsn", "root:root@tcp(localhost:3306)/widgets?parseTime=true&tls=false", "DSN")
+	flag.StringVar(&cfg.db.dsn, "dsn", "trevor:secret@tcp(localhost:3306)/widgets?parseTime=true&tls=false", "DSN")
 
 	flag.Parse()
 
@@ -72,6 +75,7 @@ func main() {
 		infoLog:  infoLog,
 		errorLog: errorLog,
 		version:  version,
+		DB: models.DBModel{DB: conn},
 	}
 
 	err = app.serve()

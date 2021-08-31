@@ -3,6 +3,7 @@ package cards
 import (
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/paymentintent"
+	"github.com/stripe/stripe-go/v72/paymentmethod"
 )
 
 // Card holds the information needed by this package
@@ -47,6 +48,28 @@ func (c *Card) CreatePaymentIntent(currency string, amount int) (*stripe.Payment
 		return nil, msg, err
 	}
 	return pi, "", nil
+}
+
+// GetPaymentMethod gets the payment method by payment intend id
+func (c *Card) GetPaymentMethod(s string) (*stripe.PaymentMethod, error) {
+	stripe.Key = c.Secret
+
+	pm, err := paymentmethod.Get(s, nil)
+	if err != nil {
+		return nil, err
+	}
+	return pm, nil
+}
+
+// RetrievePaymentIntent gets an existing payment intent by id
+func (c *Card) RetrievePaymentIntent(id string) (*stripe.PaymentIntent, error) {
+	stripe.Key = c.Secret
+
+	pi, err := paymentintent.Get(id, nil)
+	if err != nil {
+		return nil, err
+	}
+	return pi, nil
 }
 
 // cardErrorMessage returns human readable versions of card error messages

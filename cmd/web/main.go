@@ -4,15 +4,15 @@ import (
 	"encoding/gob"
 	"flag"
 	"fmt"
+	"go-stripe/internal/driver"
+	"go-stripe/internal/models"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
-	"myapp/internal/driver"
-	"myapp/internal/models"
-
+	"github.com/alexedwards/scs/mysqlstore"
 	"github.com/alexedwards/scs/v2"
 )
 
@@ -32,6 +32,8 @@ type config struct {
 		secret string
 		key    string
 	}
+	secretkey string
+	frontend  string
 }
 
 type application struct {
@@ -67,6 +69,8 @@ func main() {
 	flag.StringVar(&cfg.env, "env", "development", "Application environment {development|production}")
 	flag.StringVar(&cfg.db.dsn, "dsn", "trevor:secret@tcp(localhost:3306)/widgets?parseTime=true&tls=false", "DSN")
 	flag.StringVar(&cfg.api, "api", "http://localhost:4001", "URL to api")
+	flag.StringVar(&cfg.secretkey, "secret", "bRWmrwNUTqNUuzckjxsFlHZjxHkjrzKP", "secret key")
+	flag.StringVar(&cfg.frontend, "frontend", "http://localhost:4000", "url to front end")
 
 	flag.Parse()
 
@@ -85,6 +89,7 @@ func main() {
 	// set up session
 	session = scs.New()
 	session.Lifetime = 24 * time.Hour
+	session.Store = mysqlstore.New(conn)
 
 	tc := make(map[string]*template.Template)
 
@@ -97,6 +102,8 @@ func main() {
 		DB:            models.DBModel{DB: conn},
 		Session:       session,
 	}
+
+	go app.ListenToWsChannel()
 
 	err = app.serve()
 	if err != nil {

@@ -17,7 +17,6 @@ import (
 )
 
 const version = "1.0.0"
-const cssVersion = "1"
 
 var session *scs.SessionManager
 

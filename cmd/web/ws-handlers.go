@@ -62,7 +62,7 @@ func (app *application) WsEndPoint(w http.ResponseWriter, r *http.Request) {
 func (app *application) ListenForWS(conn *WebSocketConnection) {
 	defer func() {
 		if r := recover(); r != nil {
-			app.errorLog.Println("ERORR:", fmt.Sprintf("%v", r))
+			app.errorLog.Println( fmt.Sprintf("%v", r))
 		}
 	}()
 

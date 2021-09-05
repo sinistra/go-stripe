@@ -5,15 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
 	"go-stripe/internal/cards"
 	"go-stripe/internal/encryption"
 	"go-stripe/internal/models"
 	"go-stripe/internal/urlsigner"
 	"go-stripe/internal/validator"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/stripe/stripe-go/v72"
@@ -42,6 +43,16 @@ type jsonResponse struct {
 	ID      int    `json:"id,omitempty"`
 }
 
+func (app *application) Health(w http.ResponseWriter, r *http.Request) {
+	var resp struct {
+		Error   bool   `json:"error"`
+		Message string `json:"message"`
+	}
+	resp.Error = false
+	resp.Message = "API is operating."
+	app.writeJSON(w, http.StatusOK, resp)
+}
+
 // GetPaymentIntent gets a payment intent, and returns json (or error json)
 func (app *application) GetPaymentIntent(w http.ResponseWriter, r *http.Request) {
 	var payload stripePayload
@@ -59,8 +70,8 @@ func (app *application) GetPaymentIntent(w http.ResponseWriter, r *http.Request)
 	}
 
 	card := cards.Card{
-		Secret:   app.config.stripe.secret,
-		Key:      app.config.stripe.key,
+		Secret:   app.config.Payment.Stripe.Secret,
+		Key:      app.config.Payment.Stripe.Key,
 		Currency: payload.Currency,
 	}
 
@@ -150,8 +161,8 @@ func (app *application) CreateCustomerAndSubscribeToPlan(w http.ResponseWriter, 
 	}
 
 	card := cards.Card{
-		Secret:   app.config.stripe.secret,
-		Key:      app.config.stripe.key,
+		Secret:   app.config.Payment.Stripe.Secret,
+		Key:      app.config.Payment.Stripe.Key,
 		Currency: data.Currency,
 	}
 
@@ -438,8 +449,8 @@ func (app *application) VirtualTerminalPaymentSucceeded(w http.ResponseWriter, r
 	}
 
 	card := cards.Card{
-		Secret: app.config.stripe.secret,
-		Key:    app.config.stripe.key,
+		Secret: app.config.Payment.Stripe.Secret,
+		Key:    app.config.Payment.Stripe.Key,
 	}
 
 	pi, err := card.RetrievePaymentIntent(txnData.PaymentIntent)
@@ -504,10 +515,10 @@ func (app *application) SendPasswordResetEmail(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	link := fmt.Sprintf("%s/reset-password?email=%s", app.config.frontend, payload.Email)
+	link := fmt.Sprintf("%s/reset-password?email=%s", app.config.Application.FrontEnd, payload.Email)
 
 	sign := urlsigner.Signer{
-		Secret: []byte(app.config.secretkey),
+		Secret: []byte(app.config.Application.SignerKey),
 	}
 
 	signedLink := sign.GenerateTokenFromString(link)
@@ -550,7 +561,7 @@ func (app *application) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	encyrptor := encryption.Encryption{
-		Key: []byte(app.config.secretkey),
+		Key: []byte(app.config.Application.SignerKey),
 	}
 
 	realEmail, err := encyrptor.Decrypt(payload.Email)
@@ -691,8 +702,8 @@ func (app *application) RefundCharge(w http.ResponseWriter, r *http.Request) {
 	// validate
 
 	card := cards.Card{
-		Secret:   app.config.stripe.secret,
-		Key:      app.config.stripe.key,
+		Secret:   app.config.Payment.Stripe.Secret,
+		Key:      app.config.Payment.Stripe.Key,
 		Currency: chargeToRefund.Currency,
 	}
 
@@ -735,8 +746,8 @@ func (app *application) CancelSubscription(w http.ResponseWriter, r *http.Reques
 	}
 
 	card := cards.Card{
-		Secret:   app.config.stripe.secret,
-		Key:      app.config.stripe.key,
+		Secret:   app.config.Payment.Stripe.Secret,
+		Key:      app.config.Payment.Stripe.Key,
 		Currency: subToCancel.Currency,
 	}
 
